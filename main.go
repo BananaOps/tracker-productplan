@@ -71,7 +71,10 @@ var ConfigGeneral = Config{
 }
 
 func main() {
-	// Initialisation  synchronisation of events
+	// Initialisation synchronisation of events
+	slog.Info(
+		"init synchronize events from productplan",
+	)
 	synchronizeEvents()
 	// Create a new ticker which will fire every check inverval
 	ticker := time.NewTicker(time.Duration(ConfigGeneral.CheckInverval) * time.Second)
@@ -116,6 +119,7 @@ func createPayload(milestones Result) Payload {
 
 func synchronizeEvents() {
 
+	fmt.Println("Synchronize debug")
 	url := fmt.Sprintf("https://%s/api/v2/roadmaps/%s/milestones", ConfigGeneral.ProductPlanHost, ConfigGeneral.ProductPlanRoadmap)
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -124,16 +128,26 @@ func synchronizeEvents() {
 	req.Header.Add("accept", "application/json")
 	req.Header.Add("authorization", token)
 
-	res, _ := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+
+	}
+	if res.StatusCode != 200 {
+		slog.Error(
+			"error to get productplan  milestones",
+			"statusCode", res.Status)
+		panic(res.Status)
+	}
 
 	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
-
+	
 	var data struct {
 		Results []Result `json:"results"`
 	}
 
-	err := json.Unmarshal([]byte(body), &data)
+	err = json.Unmarshal([]byte(body), &data)
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err)
 		return
