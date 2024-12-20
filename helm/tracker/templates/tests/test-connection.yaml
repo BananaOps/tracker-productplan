@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "tracker-productplan.fullname" . }}-test-connection"
+  labels:
+    {{- include "tracker-productplan.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "tracker-productplan.fullname" . }}:{{ .Values.service.port }}/status']
+  restartPolicy: Never
