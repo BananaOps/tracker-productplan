@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-
 type Result struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
@@ -50,24 +49,23 @@ type Payload struct {
 }
 
 type Config struct {
-	CheckInverval int
-	TrackerEnv int
-	TrackerHost string
-	TrackerService string
-	TrackerOwner string
-	TrackerSource string
-	ProductPlanHost string
+	CheckInverval      int
+	TrackerEnv         int
+	TrackerHost        string
+	TrackerService     string
+	TrackerOwner       string
+	TrackerSource      string
+	ProductPlanHost    string
 	ProductPlanRoadmap string
-	ProductPlanToken string
+	ProductPlanToken   string
 }
 
 var ConfigGeneral = Config{
-	CheckInverval: 300,
+	CheckInverval:   300,
 	ProductPlanHost: "app.productplan.com",
-	TrackerOwner: "ProductPlan",
-	TrackerSource: "ProductPlan",
-	TrackerEnv: 7,
-	
+	TrackerOwner:    "ProductPlan",
+	TrackerSource:   "ProductPlan",
+	TrackerEnv:      7,
 }
 
 func main() {
@@ -82,14 +80,15 @@ func main() {
 
 	go func() {
 		for {
-			select {
-			case t := <-ticker.C:
-				slog.Info(
-					"synchronize events from productplan",
-					"time", t.Format("15:04:05"),
-				)
-				synchronizeEvents()
+			t, ok := <-ticker.C
+			if !ok {
+				break
 			}
+			slog.Info(
+				"synchronize events from productplan",
+				"time", t.Format("15:04:05"),
+			)
+			synchronizeEvents()
 		}
 	}()
 
@@ -110,7 +109,7 @@ func createPayload(milestones Result) Payload {
 	data.Attributes.Impact = false
 	data.Attributes.StartDate = ParsedTime(fmt.Sprintf("%sT09:00", milestones.Date)).Format("2006-01-02T15:04:05Z") //time.Unix(tracker.Datetime, 0).Format("2006-01-02T15:04:05Z")
 	data.Attributes.EndDate = ParsedTime(fmt.Sprintf("%sT18:00", milestones.Date)).Format("2006-01-02T15:04:05Z")   //time.Unix(tracker.EndDate, 0).Format("2006-01-02T15:04:05Z")
-	data.Attributes.Owner =  ConfigGeneral.TrackerOwner
+	data.Attributes.Owner = ConfigGeneral.TrackerOwner
 	data.Title = milestones.Title
 	data.SlackId = strconv.Itoa(milestones.ID)
 
@@ -119,7 +118,6 @@ func createPayload(milestones Result) Payload {
 
 func synchronizeEvents() {
 
-	fmt.Println("Synchronize debug")
 	url := fmt.Sprintf("https://%s/api/v2/roadmaps/%s/milestones", ConfigGeneral.ProductPlanHost, ConfigGeneral.ProductPlanRoadmap)
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -133,6 +131,13 @@ func synchronizeEvents() {
 		panic(err)
 
 	}
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	if res.StatusCode != 200 {
 		slog.Error(
 			"error to get productplan  milestones",
@@ -140,9 +145,8 @@ func synchronizeEvents() {
 		panic(res.Status)
 	}
 
-	defer res.Body.Close()
 	body, _ := io.ReadAll(res.Body)
-	
+
 	var data struct {
 		Results []Result `json:"results"`
 	}
@@ -183,7 +187,7 @@ func postTrackerEvent(payload Payload) {
 
 	body := bytes.NewReader(payloadBytes)
 
-	req, err := http.NewRequest("POST", ConfigGeneral.TrackerHost + "/api/v1alpha1/event", body)
+	req, err := http.NewRequest("POST", ConfigGeneral.TrackerHost+"/api/v1alpha1/event", body)
 	if err != nil {
 		ErrAttr(err)
 	}
@@ -203,16 +207,13 @@ func postTrackerEvent(payload Payload) {
 }
 
 func getTrackerEvent(id string) bool {
-	req, _ := http.NewRequest("GET", ConfigGeneral.TrackerHost + "/api/v1alpha1/event/"+id, nil)
+	req, _ := http.NewRequest("GET", ConfigGeneral.TrackerHost+"/api/v1alpha1/event/"+id, nil)
 	req.Header.Add("accept", "application/json")
 
 	res, _ := http.DefaultClient.Do(req)
 	defer res.Body.Close()
 
-	if res.StatusCode == 200 {
-		return true
-	}
-	return false
+	return res.StatusCode == 200
 }
 
 func updateTrackerEvent(payload Payload) {
@@ -224,7 +225,7 @@ func updateTrackerEvent(payload Payload) {
 
 	body := bytes.NewReader(payloadBytes)
 
-	req, err := http.NewRequest("PUT",  ConfigGeneral.TrackerHost + "/api/v1alpha1/event", body)
+	req, err := http.NewRequest("PUT", ConfigGeneral.TrackerHost+"/api/v1alpha1/event", body)
 	if err != nil {
 		ErrAttr(err)
 	}
@@ -256,7 +257,7 @@ func ParsedTime(dateStr string) time.Time {
 }
 
 func ErrAttr(err error) slog.Attr {
-    return slog.Any("error", err)
+	return slog.Any("error", err)
 }
 
 func init() {
