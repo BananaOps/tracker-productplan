@@ -1,0 +1,17 @@
+apiVersion: skaffold/v2beta28
+kind: Config
+build:
+  artifacts:
+    - image: bananaops/tracker-productplan
+      ko: {}
+deploy:
+  helm:
+    releases:
+      - name: tracker-productplan
+        chartPath: helm/tracker-productplan
+        namespace: tracker
+        createNamespace: true
+        artifactOverrides:
+          image: bananaops/tracker-productplan
+        imageStrategy:
+          helm: {}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tracker-productplan
+description: A Helm chart dedicated to deploy tracker productplan
+type: application
+version: 0.0.1
+appVersion: "0.0.1"
