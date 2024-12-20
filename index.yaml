@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  tracker-productplan:
+  - apiVersion: v2
+    appVersion: 0.1.1
+    created: "2024-12-20T12:00:10.283751782Z"
+    description: A Helm chart dedicated to deploy tracker productplan
+    digest: 4b096e92a260da97fdc93c3593867164fa92a9ab0427734fdc448533d67804c5
+    name: tracker-productplan
+    type: application
+    urls:
+    - https://github.com/BananaOps/tracker-productplan/releases/download/tracker-productplan-0.1.1/tracker-productplan-0.1.1.tgz
+    version: 0.1.1
+generated: "2024-12-20T12:00:10.283764235Z"
