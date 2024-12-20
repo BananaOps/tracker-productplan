@@ -60,3 +60,14 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name of the secret to use
+*/}}
+{{- define "tracker-productplan.secretName" -}}
+{{- if .Values.secret.create }}
+{{- default (include "tracker-productplan.fullname" .) .Values.secret.name }}
+{{- else }}
+{{- default "default" .Values.secret.name }}
+{{- end }}
+{{- end }}

@@ -10,6 +10,20 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+env:
+  tracker:
+    host: "http://tracker.tracker.svc.cluster.local:8080"
+    service: "my_service"
+  productplan:
+    roadmap: "1"
+
+secret: 
+  create: true
+  name: "tracker-productplan"
+  productplan: 
+    token: ""
+
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
