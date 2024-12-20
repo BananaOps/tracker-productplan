@@ -210,7 +210,10 @@ func getTrackerEvent(id string) bool {
 	req, _ := http.NewRequest("GET", ConfigGeneral.TrackerHost+"/api/v1alpha1/event/"+id, nil)
 	req.Header.Add("accept", "application/json")
 
-	res, _ := http.DefaultClient.Do(req)
+	res,err := http.DefaultClient.Do(req)
+	if err != nil {
+		ErrAttr(err)
+	}
 	defer res.Body.Close()
 
 	return res.StatusCode == 200
